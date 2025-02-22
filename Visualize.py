@@ -16,14 +16,17 @@ def FEN_to_visual(graph, FEN):
     allowed = set('/12345678bknpqrBKNPQR')
 
     if not (set(FEN) <= allowed):
-        raise Exception('Invalid FEN provided to FEN visualizer')
+        raise Exception('Invalid FEN provided to FEN visualizer: invalid character')
 
     for c in FEN:
         row = dig // 8
         col = dig - (row * 8)
 
         if(c == '/'):
-            continue
+            if(col == 0):
+                continue
+            else:
+                raise Exception('Invalid FEN provided to FEN visualizer: improperly filled row')
         elif(c.isdigit()):
             dig += int(c)
             continue
@@ -52,6 +55,7 @@ layout =     [
 ]
 window = sg.Window('Graph test', layout, finalize=True)       
 graph = window['graph'] 
+in_box = window['input']
 
 draw_board(graph)
 piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')
@@ -73,6 +77,7 @@ while True:
     if event == 'Reset':
         for image in piece_images:
             graph.delete_figure(image)
+        in_box.text='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
         piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')
 
 
