@@ -1,5 +1,7 @@
 import PySimpleGUI as sg
 import time
+import threading
+import queue
 
 def draw_board(graph):
     for i in range(8):
@@ -48,8 +50,8 @@ def generate_pieces(graph, piece_images, fen, color):
     piece_images = FEN_to_visual(graph, fen, color)
     return piece_images
 
-
-def create_window(engine_output=None):
+moves_que = queue.Queue()
+def create_window(moves=None):
     # All the stuff inside your window.
     layout =     [
         [sg.Text("Color on bottom:", font=("Calibri", 12)), sg.Combo(['White', 'Black'], default_value='White', enable_events=True, key='bottom_color')],
@@ -73,7 +75,6 @@ def create_window(engine_output=None):
     draw_board(graph)
     piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'White')
 
-
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
@@ -84,13 +85,12 @@ def create_window(engine_output=None):
 
         if event == 'Generate':
             piece_images = generate_pieces(graph, piece_images, values['FEN_input'], values['bottom_color'])
-            if engine_output != None:
-                for fen in engine_output:
-                    in_box.update(fen)
-                    piece_images = generate_pieces(graph, piece_images, fen, values['bottom_color'])
-                    window.read(timeout=10)
-                    time.sleep(.3)
-                engine_output = None
+            while not moves_que.empty():
+                fen = moves_que.get()
+                in_box.update(fen)
+                piece_images = generate_pieces(graph, piece_images, fen, values['bottom_color'])
+                window.read(timeout=10)
+                time.sleep(.3)
             
         if event == 'bottom_color':
             piece_images = generate_pieces(graph, piece_images, values['FEN_input'], values['bottom_color'])
@@ -104,7 +104,7 @@ def create_window(engine_output=None):
 
     window.close()
 
-output = [
+moves = [
 'rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR',
 'rnbqkbnr/ppp1pppp/3p4/8/2P5/8/PP1PPPPP/RNBQKBNR',
 'rnbqkbnr/ppp1pppp/3p4/8/Q1P5/8/PP1PPPPP/RNB1KBNR',
@@ -163,5 +163,11 @@ output = [
 '1kB5/p4Q2/2pp4/8/1PP5/3b2P1/P2KPP2/R6R',
 '1kB5/pQ6/2pp4/8/1PP5/3b2P1/P2KPP2/R6R'
 ]
+for move in moves:
+    moves_que.put(move)
 
-create_window(output)
+window_thread = threading.Thread(target=create_window)
+window_thread.start()
+
+for move in moves:
+    moves_que.put(move)
