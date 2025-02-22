@@ -10,7 +10,7 @@ def draw_board(graph):
             graph.DrawRectangle((i*100, j*100), (i*100+100, j*100+100), fill_color=c)
 
 
-def FEN_to_visual(graph, FEN):
+def FEN_to_visual(graph, FEN, bottom_color):
     dig = 0
     images = []
     allowed = set('/12345678bknpqrBKNPQR')
@@ -33,54 +33,58 @@ def FEN_to_visual(graph, FEN):
         else:
             dig += 1
             file_name = 'Piece-Assets\\White\\' + c + '.png' if c.isupper() else 'Piece-Assets\\Black\\' + c + '.png'
-            images.append(graph.draw_image(filename=file_name, location=(col * 100 + 20, 780 - row * 100)))
+            if bottom_color == 'White':
+                images.append(graph.draw_image(filename=file_name, location=(col * 100 + 20, 780 - row * 100))) #White on bottom
+            else:
+                images.append(graph.draw_image(filename=file_name, location=(col * 100 + 20, row * 100 + 80))) #Black on bottom
+
 
     return images
 
 
+def create_window():
+    # All the stuff inside your window.
+    layout =     [
+        [sg.Text("Color on bottom:", font=("Calibri", 12)), sg.Combo(['White', 'Black'], default_value='White', key='bottom_color')],
+        [
+            sg.Graph(
+                canvas_size=(800, 800),
+                graph_bottom_left=(0, 0),
+                graph_top_right=(800, 800),
+                key="graph"
+            )
+        ],
+        [sg.Text("FEN:", font=("Calibri", 24)), sg.Input(default_text='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', font=("Calibri", 16), key='FEN_input')],
+        [[sg.Button('Generate', size=(15,3), key='Generate'), sg.Button('Reset', size=(15,3), key='Reset')]]
+    ]
+    window = sg.Window('Chess', layout, finalize=True)       
+    graph = window['graph'] 
+    in_box = window['FEN_input']
 
-# All the stuff inside your window.
-layout =     [
-    [
-        sg.Graph(
-            canvas_size=(800, 800),
-            graph_bottom_left=(0, 0),
-            graph_top_right=(800, 800),
-            key="graph"
-        )
-    ],
-    [sg.Text("FEN:", font=("Calibri", 24))],
-    [sg.Input(default_text='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', font=("Calibri", 16), key='input')],
-    [[sg.Button('Generate', size=(15,3), key='Generate'), sg.Button('Reset', size=(15,3), key='Reset')]]
-]
-window = sg.Window('Graph test', layout, finalize=True)       
-graph = window['graph'] 
-in_box = window['input']
-
-draw_board(graph)
-piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')
-
-
-# Event Loop to process "events" and get the "values" of the inputs
-while True:
-    event, values = window.read()
-
-    # if user closes window or clicks cancel
-    if event == sg.WIN_CLOSED:
-        break
-
-    if event == 'Generate':
-        for image in piece_images:
-            graph.delete_figure(image)
-        piece_images = FEN_to_visual(graph, values['input'])
-    
-    if event == 'Reset':
-        for image in piece_images:
-            graph.delete_figure(image)
-        in_box.text='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
-        piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')
+    draw_board(graph)
+    piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'White')
 
 
-window.close()
+    # Event Loop to process "events" and get the "values" of the inputs
+    while True:
+        event, values = window.read()
+
+        #If user closes window stop loop
+        if event == sg.WIN_CLOSED:
+            break
+
+        if event == 'Generate':
+            for image in piece_images:
+                graph.delete_figure(image)
+            piece_images = FEN_to_visual(graph, values['FEN_input'], values['bottom_color'])
+        
+        if event == 'Reset':
+            for image in piece_images:
+                graph.delete_figure(image)
+            in_box.text='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
+            piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', values['bottom_color'])
 
 
+    window.close()
+
+create_window()
