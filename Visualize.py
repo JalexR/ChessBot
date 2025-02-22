@@ -67,7 +67,7 @@ def create_window(moves=None):
         [[sg.Button('Generate', size=(15,3), bind_return_key=True, key='Generate'), sg.Button('Reset', size=(15,3), key='Reset')]]
     ]
 
-    window = sg.Window('Chess', layout, finalize=True)
+    window = sg.Window('Chess', layout, icon='Piece-Assets\\P.ico', finalize=True)
     graph = window['graph'] 
     in_box = window['FEN_input']
     # window['FEN_input'].bind("<Return>", "Generate")
