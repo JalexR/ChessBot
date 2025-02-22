@@ -39,7 +39,7 @@ def FEN_to_visual(graph, FEN, bottom_color):
             if bottom_color == 'White':
                 images.append(graph.draw_image(filename=file_name, location=(col * 100 + 20, 780 - row * 100))) #White on bottom
             else:
-                images.append(graph.draw_image(filename=file_name, location=(col * 100 + 20, row * 100 + 80))) #Black on bottom
+                images.append(graph.draw_image(filename=file_name, location=(720  - col * 100, row * 100 + 80))) #Black on bottom
 
 
     return images
@@ -90,7 +90,7 @@ def create_window(moves=None):
                 in_box.update(fen)
                 piece_images = generate_pieces(graph, piece_images, fen, values['bottom_color'])
                 window.read(timeout=10)
-                time.sleep(.3)
+                time.sleep(.1)
             
         if event == 'bottom_color':
             piece_images = generate_pieces(graph, piece_images, values['FEN_input'], values['bottom_color'])
@@ -169,5 +169,5 @@ for move in moves:
 window_thread = threading.Thread(target=create_window)
 window_thread.start()
 
-for move in moves:
-    moves_que.put(move)
+# for move in moves:
+#     moves_que.put(move)
