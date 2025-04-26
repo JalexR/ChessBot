@@ -89,7 +89,7 @@ def create_window(moves=None):
                 fen = moves_que.get()
                 in_box.update(fen)
                 piece_images = generate_pieces(graph, piece_images, fen, values['bottom_color'])
-                window.read(timeout=3)
+                window.read(timeout=10)
                 #time.sleep(.3)
             
         if event == 'bottom_color':

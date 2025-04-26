@@ -4,53 +4,44 @@
 # Group: StockGopher
 # Implements the framework for Monte Carlo tree search. Const
 
-# NOTES:
-# The two placeholder functions must be replaced with working functions!
-#
-# A game state is taken to mean a chess board along with the player to move.
-# A state object is assumed to have state.player, either "white" or "black"
-
 import time
 import math
+import random
 
-# ---------------------------------------------
-# Chess functions (PLACEHOLDERS - REPLACE WITH REAL CODE!)
-# ---------------------------------------------
-def get_successors(state):
+def get_successors(node):
     """
-    Given a chess state, returns all states that the player can move to as a list.
+    Given a chess board, returns all legal moves and their resulting boards into a list.
     """
-    pass
-
-def is_end(state): # Checks for checkmate; "white" for white win, "black" for black win, 0 else
-    """
-    Given a chess state, returns "white" or "black" if the state is a win for
-    one player, and returns 0 if the game has not ended.
-    """
-    pass
+    moves = list(node.board.legal_moves)
+    boards_moves = []
+    for move in moves:
+        new_board = node.board.copy()
+        new_board.push(move)
+        boards_moves.append((new_board, move))
+    return boards_moves
 
 
-# ---------------------------------------------
-# Search Tree Class
-# ---------------------------------------------
+
+
 class Tree_Node:
     """ 
     A structure for representing the Monte Carlo search tree. Each node keeps
-    track of its game state, the proportion of wins, and its children and parent.
+    track of its game board, the move leading into it, the proportion of wins, and its children and parent.
     """
 
-    def __init__(self, state = None):
+    def __init__(self, board = None, move = None):
         self.parent = None
-        self.state = state
+        self.board = board
+        self.move = move
         self.playouts = 0
         self.wins = 0
         self.children = []
 
-    def add_child(self, state):
+    def add_child(self, board, move = None): #>>>> Need move associated with board for returning later
         """
-        Adds a child with the given state.
+        Adds a child with the given board.
         """
-        new_child = Tree_Node(state)
+        new_child = Tree_Node(board, move)
         new_child.parent = self
         self.children.append(new_child)
 
@@ -100,18 +91,34 @@ class Tree_Node:
             succ.print(n + 1)
         
 
-# ---------------------------------------------
-# Search Agent Class
-# ---------------------------------------------
-class Monte_Carlo_Agent:
+
+class Playout_Policies:
+
+    @staticmethod
+    def Random(node):
+
+        board = node.board.copy()
+        while not board.is_game_over():
+            successors = list(board.legal_moves)
+            move = random.choice(successors)
+            board.push(move)
+
+        return board.outcome()
+    
+
+
+
+
+class Agent:
     """
     An agent that can perform Monte Carlo Tree Search from a given Chess
     posiiton. The selection policy is UCB1, but the playout policy can be anything.
     """
 
-    def __init__(self, policy):
-        self.playout = policy 
-        # Playout policy; Plays out from a state, 
+    def __init__(self, playout_policy, duration):
+        self.playout = playout_policy 
+        self.duration = duration
+        # Playout policy; Plays out from a board, 
         # returns "white" for white win, "black" for black win, "draw" for draw
 
     def add_playout(self, node):
@@ -120,7 +127,7 @@ class Monte_Carlo_Agent:
         tree.
         """
         outcome = self.playout(node) # 3: Perform a playout from that leaf node
-        if outcome == node.state.player: # 4: Back propagate
+        if outcome == node.board.turn: # 4: Back propagate
             node.propagate("win")
         else:
             node.propagate("loss")
@@ -137,9 +144,9 @@ class Monte_Carlo_Agent:
         # First, make sure each child has at least one playout
         for child in node.children:
             if child.playouts == 0:
-                self.add_playout(child, node)
+                self.add_playout(child)
 
-        curr_choice = None
+        curr_choice = node.children[0] 
         curr_score = 0
         for child in node.children:
             new_score = (child.wins / child.playouts) + math.sqrt(2 * math.log(node.playouts) / child.playouts)
@@ -149,43 +156,45 @@ class Monte_Carlo_Agent:
         
         return curr_choice
 
-
-    def search(self, state, duration = 1): 
+    def search(self, board): 
         """
-        Given a state to play from, returns the state to which the current
+        Given a board to play from, returns the board to which the current
         player should move.
 
         Arguments:
-        state -- The board state to play from. Has state.player attribute
+        board -- The board board to play from. Has board.player attribute
         duration -- The time, in seconds, to be spent searching.
         """
 
-        if not is_end(state) == 0:
+        if not board.outcome() == None:
             return None
         
         beginning = time.time()
-        tree = Tree_Node(state)
-        while time.time() - beginning < duration:
+        tree = Tree_Node(board)
+        while time.time() - beginning < self.duration:
             curr = tree
-            while not curr == None: # 1: Select until you get to a leaf node
-                curr = self.selection_policy(curr)
+            while True:
+                selected = self.selection_policy(curr)
+                if selected is None:
+                    break
+                curr = selected
 
-            # Make sure the current state isn't checkmate
-            game_ended = is_end(curr)
-            if game_ended != 0: 
-                outcome = game_ended
+            # Make sure the current board isn't checkmate
+            if curr.board.is_game_over(): 
+                continue
             else: # 2: Expand node and choose a child
-                successors = get_successors(curr.state) 
+                successors = get_successors(curr) 
                 for succ in successors:
-                    curr.add_child(succ)
-                curr = curr.child(0)
+                    curr.add_child(succ[0], succ[1])
+                curr = self.selection_policy(curr)  #>>>>>This is better than just picking the first child
                 self.add_playout(curr) # 3, 4: Playout and back propagate
 
         # Return the child with the most playouts
         max_playouts = 0
         answer = tree.child(0)
         for option in tree.children:
-            if (not option == None) and max_playouts < len(option.children):
-                max_playouts = len(option.children)
+            if option and option.playouts > max_playouts:
+                max_playouts = option.playouts
                 answer = option
-        return answer
+        return answer.move
+
