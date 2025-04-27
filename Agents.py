@@ -24,6 +24,7 @@ class MonteCarloAgent():
 
 def Tournament(Agent1, Agent2, n, push_to_window = False, print_debug = False):
     '''Play n games between two agents and return the results in array [agent1 wins][draws][agent2 wins] with agent1 as white and agent2 as black.'''
+    print('Tournament started')
     result = [0 for i in range(3)]
 
     for n in range(n):
