@@ -31,7 +31,7 @@ def Tournament(Agent1, Agent2, n, push_to_window = False, print_debug = False):
         board = chess.Board()
         move = Agent1(board)
         
-
+        i = 0
         while move != None and not board.is_game_over():
             if push_to_window:
                 Visualize.moves_que.put(board.board_fen())
@@ -39,13 +39,14 @@ def Tournament(Agent1, Agent2, n, push_to_window = False, print_debug = False):
             if board.turn == chess.WHITE:
                 move = Agent1(board)
                 if print_debug:
-                    print('Agent ones move:', move)
+                    print(i, 'Agent ones move:', move)
             else:
                 move = Agent2(board)
                 if print_debug:
-                    print('Agent twos move:', move)
+                    print(i, 'Agent twos move:', move)
 
             board.push(move)
+            i += 1
 
         outcome = board.outcome()
         if outcome is not None:

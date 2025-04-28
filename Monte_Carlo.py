@@ -98,12 +98,12 @@ class Playout_Policies:
     def Random(node):
 
         board = node.board.copy()
-        while not board.is_game_over():
+        while not board.is_game_over(): #Must playout board to end
             successors = list(board.legal_moves)
             move = random.choice(successors)
             board.push(move)
 
-        return board.outcome()
+        return board.outcome() #Must return outcome
     
 
 
@@ -196,5 +196,5 @@ class Agent:
             if option and option.playouts > max_playouts:
                 max_playouts = option.playouts
                 answer = option
-        return answer.move
+        return answer.move if answer is not None else None
 
