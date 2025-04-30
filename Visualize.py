@@ -1,6 +1,5 @@
 import FreeSimpleGUI as sg
 import time
-import threading
 import queue
 
 def draw_board(graph):
@@ -51,6 +50,7 @@ def generate_pieces(graph, piece_images, fen, color):
     return piece_images
 
 moves_que = queue.Queue()
+newest_board = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
 def create_window(moves=None):
     # All the stuff inside your window.
     layout =     [
@@ -64,33 +64,37 @@ def create_window(moves=None):
             )
         ],
         [sg.Text("FEN:", font=("Calibri", 24)), sg.Input(default_text='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', font=("Calibri", 16), key='FEN_input')],
-        [[sg.Button('Generate', size=(15,3), bind_return_key=True, key='Generate'), sg.Button('Reset', size=(15,3), key='Reset')]]
+        [[sg.Button('Generate', size=(15,3), bind_return_key=True, key='Generate'), sg.Checkbox('Live update', default=True, key='live-update'), sg.Button('Reset', size=(15,3), key='Reset')]]
     ]
 
     window = sg.Window('Chess', layout, icon='Piece-Assets\\P.ico', finalize=True)
     graph = window['graph'] 
     in_box = window['FEN_input']
-    # window['FEN_input'].bind("<Return>", "Generate")
 
     draw_board(graph)
     piece_images = FEN_to_visual(graph, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'White')
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-        event, values = window.read()
+        event, values = window.read(timeout=20)
 
         #If user closes window stop loop
         if event == sg.WIN_CLOSED:
             break
 
-        if event == 'Generate':
+        if event == 'Generate' and not values['live-update']:
             piece_images = generate_pieces(graph, piece_images, values['FEN_input'], values['bottom_color'])
             while not moves_que.empty():
                 fen = moves_que.get()
                 in_box.update(fen)
                 piece_images = generate_pieces(graph, piece_images, fen, values['bottom_color'])
-                window.read(timeout=10)
                 time.sleep(1)
+
+        if  values['live-update']:
+            if values['FEN_input'] != newest_board:
+                in_box.update(newest_board)
+                piece_images = generate_pieces(graph, piece_images, newest_board, values['bottom_color'])
+
             
         if event == 'bottom_color':
             piece_images = generate_pieces(graph, piece_images, values['FEN_input'], values['bottom_color'])
@@ -103,3 +107,4 @@ def create_window(moves=None):
 
 
     window.close()
+

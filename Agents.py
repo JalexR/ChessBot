@@ -35,6 +35,7 @@ def Tournament(Agent1, Agent2, n, push_to_window = False, print_debug = False):
         while move != None and not board.is_game_over():
             if push_to_window:
                 Visualize.moves_que.put(board.board_fen())
+                Visualize.newest_board = board.board_fen()
 
             if board.turn == chess.WHITE:
                 move = Agent1(board)
