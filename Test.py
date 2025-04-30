@@ -8,8 +8,8 @@ window_thread = threading.Thread(target=Visualize.create_window)
 window_thread.start()
 time.sleep(3)
 
-MC_agent = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Offense, 5)
-MC_agent2 = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Defense, 5)
+MC_agent = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Offense, 15)
+MC_agent2 = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Defense, 15)
 # Random, Offense, or Defense for playout policy
 
 game_thread = threading.Thread(

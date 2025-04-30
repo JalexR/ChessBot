@@ -1,9 +1,3 @@
-# Author: Andrew Gill
-# Class: CSCI 4511W
-# Assignment: Final Project
-# Group: StockGopher
-# Implements the framework for Monte Carlo tree search. Const
-
 import time
 import math
 import random
@@ -123,6 +117,13 @@ class Playout_Policies:
             best_moves = []
             max_value = -1
             for move in legal_moves:
+                #Check if this move puts opponent in checkmate
+                oboard = board.copy()
+                oboard.push(move)
+                if oboard.is_checkmate():
+                    best_moves = [move]
+                    break
+
                 # checking if the move is captureing a piece
                 if board.is_capture(move):
                     captured_square = move.to_square
@@ -156,6 +157,13 @@ class Playout_Policies:
             best_moves = []
             max_value = -1
             for move in legal_moves:
+                #Check if this move puts opponent in checkmate
+                oboard = board.copy()
+                oboard.push(move)
+                if oboard.is_checkmate():
+                    best_moves = [move]
+                    break
+
                 # getting the piece that just moved
                 moving_piece = board.piece_at(move.from_square)
                 # if a piece was found
