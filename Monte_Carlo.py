@@ -267,6 +267,6 @@ class Agent:
                 answers = [option]
             elif option and option.playouts == max_playouts:
                 answers.append(option)
-        final_pick = random.choice(answer)
+        final_pick = random.choice(answers)
         return final_pick.move if final_pick is not None else None
 
