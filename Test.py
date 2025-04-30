@@ -8,8 +8,8 @@ window_thread = threading.Thread(target=Visualize.create_window)
 window_thread.start()
 time.sleep(3)
 
-MC_agent = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Random, 5)
-MC_agent2 = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Random, 5)
+MC_agent = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Offense, 5)
+MC_agent2 = Agents.MonteCarloAgent(Monte_Carlo.Playout_Policies.Defense, 5)
 # Random, Offense, or Defense for playout policy
 
 game_thread = threading.Thread(
@@ -18,6 +18,7 @@ game_thread = threading.Thread(
     args=(MC_agent.play, MC_agent2.play, 1),
     kwargs={'push_to_window': True, 'print_debug': True}
 )
+game_thread.daemon = True #Makes game thread close when window closes
 
 # game_thread2 = threading.Thread(
 #     target=Agents.Tournament,

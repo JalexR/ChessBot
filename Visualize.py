@@ -76,11 +76,16 @@ def create_window(moves=None):
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-        event, values = window.read(timeout=20)
+        event, values = window.read(timeout=1)
 
         #If user closes window stop loop
         if event == sg.WIN_CLOSED:
             break
+
+        if  values['live-update']:
+            if values['FEN_input'] != newest_board:
+                in_box.update(newest_board)
+                piece_images = generate_pieces(graph, piece_images, newest_board, values['bottom_color'])
 
         if event == 'Generate' and not values['live-update']:
             piece_images = generate_pieces(graph, piece_images, values['FEN_input'], values['bottom_color'])
@@ -89,11 +94,6 @@ def create_window(moves=None):
                 in_box.update(fen)
                 piece_images = generate_pieces(graph, piece_images, fen, values['bottom_color'])
                 time.sleep(1)
-
-        if  values['live-update']:
-            if values['FEN_input'] != newest_board:
-                in_box.update(newest_board)
-                piece_images = generate_pieces(graph, piece_images, newest_board, values['bottom_color'])
 
             
         if event == 'bottom_color':
