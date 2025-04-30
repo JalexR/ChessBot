@@ -218,7 +218,7 @@ class Agent:
         curr_choice = node.children[0] 
         curr_score = 0
         for child in node.children:
-            new_score = (child.wins / child.playouts) + math.sqrt(2 * math.log(node.playouts) / child.playouts)
+            new_score = (child.wins / child.playouts) + 4 * math.sqrt(2 * math.log(node.playouts) / child.playouts)
             if new_score > curr_score:
                 curr_choice = child
                 curr_score = new_score
