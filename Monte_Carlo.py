@@ -7,6 +7,17 @@
 import time
 import math
 import random
+import chess
+
+PIECE_VALS = {
+    chess.PAWN: 1,
+    chess.KNIGHT: 3,
+    chess.BISHOP: 3,
+    chess.ROOK: 5,
+    chess.QUEEN: 9,
+    chess.KING: 0
+}
+
 
 def get_successors(node):
     """
@@ -96,7 +107,6 @@ class Playout_Policies:
 
     @staticmethod
     def Random(node):
-
         board = node.board.copy()
         while not board.is_game_over(): #Must playout board to end
             successors = list(board.legal_moves)
@@ -105,7 +115,66 @@ class Playout_Policies:
 
         return board.outcome() #Must return outcome
     
-
+    @staticmethod
+    def Offense(node):
+        board = node.board.copy()
+        while not board.is_game_over():
+            legal_moves = list(board.legal_moves)
+            best_moves = []
+            max_value = -1
+            for move in legal_moves:
+                # checking if the move is captureing a piece
+                if board.is_capture(move):
+                    captured_square = move.to_square
+                    captured_piece = board.piece_at(captured_square)
+                    # checking if there was a captured piece
+                    if captured_piece:
+                        # value of captured peice
+                        value = PIECE_VALS.get(captured_piece.piece_type, 0)
+                        # checking if taking the piece is the best move so far
+                        if value > max_value:
+                            max_value = value
+                            best_moves = [move]
+                        elif value == max_value:
+                            best_moves.append(move)
+            # if moves that captured pieces were found
+            if best_moves:
+                chosen_move = random.choice(best_moves)
+                # reseting bestmoves
+                best_moves = []
+            # if there were no moves that captured pieces
+            else:
+                chosen_move = random.choice(legal_moves)
+            board.push(chosen_move)
+        return board.outcome()
+    
+    @staticmethod
+    def Defense(node):
+        board = node.board.copy()    
+        while not board.is_game_over():
+            legal_moves = list(board.legal_moves)
+            best_moves = []
+            max_value = -1
+            for move in legal_moves:
+                # getting the piece that just moved
+                moving_piece = board.piece_at(move.from_square)
+                # if a piece was found
+                if moving_piece and moving_piece.color == board.turn:
+                    value = PIECE_VALS.get(moving_piece.piece_type, 0)
+                    # checking if the last move was a good one
+                    if value > max_value:
+                        max_value = value
+                        best_moves = [move]
+                    elif value == max_value:
+                        best_moves.append(move)
+            # if a good move was found
+            if best_moves:
+                chosen_move = random.choice(best_moves)
+            # if no move was found
+            else:
+                chosen_move = random.choice(legal_moves)
+            board.push(chosen_move)
+        return board.outcome()
 
 
 
