@@ -218,7 +218,7 @@ class Agent:
         curr_choice = node.children[0] 
         curr_score = 0
         for child in node.children:
-            new_score = (child.wins / child.playouts) + 4 * math.sqrt(2 * math.log(node.playouts) / child.playouts)
+            new_score = (child.wins / child.playouts) + math.sqrt(2 * math.log(node.playouts) / child.playouts)
             if new_score > curr_score:
                 curr_choice = child
                 curr_score = new_score
@@ -258,12 +258,15 @@ class Agent:
                 curr = self.selection_policy(curr)  #>>>>>This is better than just picking the first child
                 self.add_playout(curr) # 3, 4: Playout and back propagate
 
-        # Return the child with the most playouts
+        # Return a child with the most playouts, randomly picking to break ties
         max_playouts = 0
-        answer = tree.child(0)
+        answers = [tree.child(0)]
         for option in tree.children:
             if option and option.playouts > max_playouts:
                 max_playouts = option.playouts
-                answer = option
-        return answer.move if answer is not None else None
+                answers = [option]
+            elif option and option.playouts == max_playouts:
+                answers.append(option)
+        final_pick = random.choice(answer)
+        return final_pick.move if final_pick is not None else None
 
