@@ -116,73 +116,72 @@ class Playout_Policies:
             legal_moves = list(board.legal_moves)
             best_moves = []
             max_value = -1
+            # Check for checkmating move
             for move in legal_moves:
-                #Check if this move puts opponent in checkmate
-                oboard = board.copy()
-                oboard.push(move)
-                if oboard.is_checkmate():
-                    best_moves = [move]
-                    break
-
-                # checking if the move is captureing a piece
+                board.push(move)
+                if board.is_checkmate():
+                    return board.outcome()
+                board.pop()
+            # Check for best capture move
+            for move in legal_moves:
                 if board.is_capture(move):
-                    captured_square = move.to_square
-                    captured_piece = board.piece_at(captured_square)
-                    # checking if there was a captured piece
+                    # making move
+                    board.push(move)
+                    # checking if captured piece
+                    captured_piece = board.piece_at(move.to_square)
                     if captured_piece:
-                        # value of captured peice
+                        # getting value
                         value = PIECE_VALS.get(captured_piece.piece_type, 0)
-                        # checking if taking the piece is the best move so far
+                        # seeing if the move was good
                         if value > max_value:
                             max_value = value
                             best_moves = [move]
                         elif value == max_value:
                             best_moves.append(move)
-            # if moves that captured pieces were found
+                    board.pop()
+            # Choose best capture or random move
             if best_moves:
                 chosen_move = random.choice(best_moves)
-                # reseting bestmoves
-                best_moves = []
-            # if there were no moves that captured pieces
             else:
                 chosen_move = random.choice(legal_moves)
             board.push(chosen_move)
         return board.outcome()
     
-    @staticmethod
-    def Defense(node):
-        board = node.board.copy()    
-        while not board.is_game_over():
-            legal_moves = list(board.legal_moves)
-            best_moves = []
-            max_value = -1
-            for move in legal_moves:
-                #Check if this move puts opponent in checkmate
-                oboard = board.copy()
-                oboard.push(move)
-                if oboard.is_checkmate():
+@staticmethod
+def Defense(node):
+    board = node.board.copy()
+    my_color = board.turn
+    while not board.is_game_over():
+        legal_moves = list(board.legal_moves)
+        best_moves = []
+        max_value = -1
+        # Check for checkmate
+        for move in legal_moves:
+            board.push(move)
+            if board.is_checkmate():
+                return board.outcome()
+            board.pop()
+        # Prioritize moving endangered high-value pieces
+        for move in legal_moves:
+            moving_piece = board.piece_at(move.from_square)
+            if moving_piece and moving_piece.color == my_color:
+                value = PIECE_VALS.get(moving_piece.piece_type, 0)
+                # Simulate move
+                board.push(move)
+                attackers = board.attackers(not my_color, move.to_square)
+                board.pop()
+                if not attackers and value > max_value:
+                    max_value = value
                     best_moves = [move]
-                    break
-
-                # getting the piece that just moved
-                moving_piece = board.piece_at(move.from_square)
-                # if a piece was found
-                if moving_piece and moving_piece.color == board.turn:
-                    value = PIECE_VALS.get(moving_piece.piece_type, 0)
-                    # checking if the last move was a good one
-                    if value > max_value:
-                        max_value = value
-                        best_moves = [move]
-                    elif value == max_value:
-                        best_moves.append(move)
-            # if a good move was found
-            if best_moves:
-                chosen_move = random.choice(best_moves)
-            # if no move was found
-            else:
-                chosen_move = random.choice(legal_moves)
-            board.push(chosen_move)
-        return board.outcome()
+                elif not attackers and value == max_value:
+                    best_moves.append(move)
+        # Pick safe high-value move if found
+        if best_moves:
+            chosen_move = random.choice(best_moves)
+        else:
+            chosen_move = random.choice(legal_moves)
+        board.push(chosen_move)
+    return board.outcome()
 
 
 
@@ -230,7 +229,6 @@ class Agent:
             if new_score > curr_score:
                 curr_choice = child
                 curr_score = new_score
-        
         return curr_choice
 
     def search(self, board): 
@@ -276,5 +274,7 @@ class Agent:
             elif option and option.playouts == max_playouts:
                 answers.append(option)
         final_pick = random.choice(answers)
+        print(final_pick.wins)
+        print(final_pick.playouts)
         return final_pick.move if final_pick is not None else None
 
